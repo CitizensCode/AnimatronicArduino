@@ -1,6 +1,7 @@
 
 #include <SPI.h>
 #include <SD.h>
+#include <Adafruit_VS1053.h>
 
 #define DEBUG 5
 #define SCRIPT_INTERMISSION_MS    5000
@@ -11,6 +12,7 @@
 
 // These are common pins between breakout and shield
 #define CARDCS 4     // Card chip select pin
+#define DREQ 3       // VS1053 Data request, ideally an Interrupt pin
 
 #define MAX_LINE_LENGTH 128
 #define MAX_ARG_LENGTH 32
@@ -19,6 +21,13 @@
 #define SCRIPT_OPEN       1
 #define SCRIPT_EOF        2
 
+
+
+Adafruit_VS1053_FilePlayer musicPlayer = 
+  // create breakout-example object!
+  //Adafruit_VS1053_FilePlayer(BREAKOUT_RESET, BREAKOUT_CS, BREAKOUT_DCS, DREQ, CARDCS);
+  // create shield-example object!
+  Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
 
 unsigned long ref_time = millis();
 unsigned long delay_time = 0;
@@ -34,6 +43,10 @@ bool runningScript = false;
 int scriptStatus = SCRIPT_NOT_OPEN;
 bool parseLine = false;
 bool scriptFinished = true;
+
+String audiofilename;
+char filename_char[10];
+
 
 void terminate_arg_string(int arg_id, int arg_index, char statue_id[], char command[], char command_args[],  char pause[]) {
   // terminate arg with null
@@ -143,6 +156,18 @@ void setup() {
 
   ref_time = millis();
 
+  if (! musicPlayer.begin()) { // initialise the music player
+     Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
+     while (1);
+  }
+  Serial.println(F("VS1053 found"));
+
+  musicPlayer.setVolume(10,10);
+
+  musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
+  Serial.println(F("Playing test file..."));
+  musicPlayer.playFullFile("left.mp3");
+
 //  scriptFile = SD.open("script.txt");
 //
 //  if (scriptFile && scriptFile.available()) {
@@ -186,6 +211,10 @@ void setup() {
 
 
 void loop() {
+  if (DEBUG > 10) {
+    Serial.println("  Entering loop iteration...");
+  }
+  
   if (runningScript == false) {
     // only start a script if delay_time has elapsed (initially 0, later set to script intermission time)
     if (millis() - ref_time >= delay_time) {
@@ -244,6 +273,15 @@ void loop() {
           if (DEBUG > 1) {
             Serial.println("HANDLING PLAY COMMAND");
           }
+          musicPlayer.stopPlaying();
+
+          audiofilename = "z/";
+          audiofilename.concat(command_args);
+          audiofilename.concat(".mp3");
+
+          audiofilename.toCharArray(filename_char, 10);
+          
+          musicPlayer.startPlayingFile(filename_char);
         }
   
         delay_time = (unsigned long) String(pause).toInt();
@@ -277,6 +315,10 @@ void loop() {
         Serial.print(" ms before next starting the next script...\n");
       }
     }
-    
+
+
+    if (DEBUG > 10) {
+      Serial.println("  Exiting loop iteration...");
+    }
   }
 }
