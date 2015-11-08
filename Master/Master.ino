@@ -19,7 +19,7 @@ Metro sendCoords = Metro(150);  // Send the result every 250ms
 //bool changed = true;
 
 // Distance between the range finders
-#define distRF 148.0
+#define distRF 190.0
 #define rangeA 7 // RF A
 #define rangeB 8 // RF B
 long pulseA, pulseB;
@@ -100,6 +100,7 @@ void loop() {
 
     // Get the angle relative to the first sensor
     angle = angleCalc(pulseA, pulseB);
+    // Serial.println(angle * 180 / 3.14159);
 
     // Smooth the movement
     readingsTotal = readingsTotal - readings[readingIndex]; // Subtract the old
@@ -116,7 +117,7 @@ void loop() {
     // negative because of the coordinate system used relative to the position
     // of the sensors.
     xCoord = pulseA * cos(smoothedAngle);
-    yCoord = -1 * pulseA * sin(smoothedAngle);
+    yCoord = pulseA * sin(smoothedAngle);
   }
 
   // Send the smoothed distance reading at the rate specified above

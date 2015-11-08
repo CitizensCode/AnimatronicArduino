@@ -8,8 +8,8 @@
 // The unique ID of the unit
 int statueId = 1;
 // Statue position
-#define statueX 95.0
-#define statueY 10.0
+#define statueX 90.0
+#define statueY 164.0
 
 int currentAngle = 0;
 int destinationAngle = 0;
@@ -96,15 +96,15 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
 void loop() {
   // If we receive data, do something with it.
   if (ETin.receiveData()) {
-//  Serial.println("---------------");
-//  Serial.print("Statue: ");
-//  Serial.println(receiveData.unitId);
-//  Serial.print("Command: ");
-//  Serial.println(receiveData.commandType);
-//  Serial.print("X: ");
-//  Serial.print(receiveData.xPos);
-//  Serial.print(", Y: ");
-//  Serial.println(receiveData.yPos);
+   // Serial.println("---------------");
+   // Serial.print("Statue: ");
+   // Serial.println(receiveData.unitId);
+   // Serial.print("Command: ");
+   // Serial.println(receiveData.commandType);
+   // Serial.print("X: ");
+   // Serial.print(receiveData.xPos);
+   // Serial.print(", Y: ");
+   // Serial.println(receiveData.yPos);
 
   // Convert the x,y coordinate to an angle
   destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
