@@ -77,7 +77,7 @@ struct RECEIVE_DATA_STRUCTURE{
 RECEIVE_DATA_STRUCTURE receiveData;
 
 // How often to receive data
-Metro getData = Metro(1000);
+Metro getData = Metro(10);
 
 
 // struct SEND_DATA_STRUCTURE{
@@ -146,7 +146,8 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
 
 void loop() {
   // If we receive data, do something with it.
-  if (ETin.receiveData() && getData.check() == 1) {
+  // if (ETin.receiveData() && getData.check() == 1) {
+  if (getData.check() == 1) {
    // Serial.println("---------------");
    // Serial.print("Statue: ");
    // Serial.println(receiveData.unitId);
