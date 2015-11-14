@@ -138,7 +138,7 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
   // Because servos measure angle backwards for some reason, we have to
   // map the geometric angle to a servo angle
   deg = map(deg, 0, 180, 180, 0);
-  deg = deg - offset;
+  deg = constrain(deg - offset, 0, 180);
   // Serial.println(deg);
   return deg;
 }
@@ -146,8 +146,7 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
 
 void loop() {
   // If we receive data, do something with it.
-  // if (ETin.receiveData() && getData.check() == 1) {
-  if (getData.check() == 1) {
+  if (ETin.receiveData() && getData.check() == 1) {
    // Serial.println("---------------");
    // Serial.print("Statue: ");
    // Serial.println(receiveData.unitId);
@@ -159,8 +158,7 @@ void loop() {
    // Serial.println(receiveData.yPos);
 
   // Convert the x,y coordinate to an angle
-  // destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
-  destinationAngle = random(180);
+  destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
   Serial.println(destinationAngle);
 
   // sendData.blink = 1;
