@@ -2,6 +2,8 @@
 // #include <SoftwareSerial.h>
 #include <Servo.h>
 #include <SPI.h>
+#include <ServoEaser.h>
+#include <Metro.h>
 // #include <Adafruit_VS1053.h>
 // #include <SD.h>
 
@@ -14,11 +16,35 @@ int statueId = 1;
 
 int currentAngle = 0;
 int destinationAngle = 0;
-// Used to smooth the motion between positions. The closer to 
-// 1, the faster the motion converges to its destination.
-float smooth = 0.1;
 
 Servo statueServo;
+ServoEaser servoEaser;
+int servoFrameMillis = 20;  // minimum time between servo updates
+const int servSpeed = 60.0; // Degrees per second
+// Initial movement duration
+int duration = 1000; 
+// The upper and lower bound for how long a movement should take
+int durationLower;
+int durationUpper;
+
+//////// A bunch of easing functions //////
+
+// from Easing::easeInOutQuad()
+float easeInOutQuad (float t, float b, float c, float d) {
+  if ((t/=d/2) < 1) return c/2*t*t + b;
+  return -c/2 * ((--t)*(t-2) - 1) + b;
+}
+// from Easing::easeInOutCubic()
+float easeInOutCubic (float t, float b, float c, float d) {
+  if ((t/=d/2) < 1) return c/2*t*t*t + b;
+  return c/2*((t-=2)*t*t + 2) + b;
+}
+// from Easing::easeInOutQuart()
+float easeInOutQuart (float t, float b, float c, float d) {
+  if ((t/=d/2) < 1) return c/2*t*t*t*t + b;
+  return -c/2 * ((t-=2)*t*t*t - 2) + b;
+}
+
 
 // SoftwareSerial XBee =  SoftwareSerial(2, 3);
 
@@ -50,6 +76,10 @@ struct RECEIVE_DATA_STRUCTURE{
 };
 RECEIVE_DATA_STRUCTURE receiveData;
 
+// How often to receive data
+Metro getData = Metro(1000);
+
+
 // struct SEND_DATA_STRUCTURE{
 //   int blink;
 // };
@@ -62,6 +92,25 @@ void setup() {
   // ETout.begin(details(sendData), &Serial);
 
   statueServo.attach(9);
+  servoEaser.begin( statueServo, servoFrameMillis);
+  servoEaser.useMicroseconds(true);
+
+  if (statueId == 1 || statueId == 2) {
+    servoEaser.setEasingFunc(easeInOutQuad);
+    durationLower = 500;
+    durationUpper = 1200;
+  } else if (statueId == 3) {
+    servoEaser.setEasingFunc(easeInOutCubic);
+    durationLower = 800;
+    durationUpper = 1500;
+  } else {
+    servoEaser.setEasingFunc(easeInOutQuart);
+    durationLower = 1000;
+    durationUpper = 2000;
+  }
+  
+
+  servoEaser.easeTo( 90, 1000);
 
   // if (! musicPlayer.begin()) { // initialise the music player
   //    // Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
@@ -97,7 +146,7 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
 
 void loop() {
   // If we receive data, do something with it.
-  if (ETin.receiveData()) {
+  if (ETin.receiveData() && getData.check() == 1) {
    // Serial.println("---------------");
    // Serial.print("Statue: ");
    // Serial.println(receiveData.unitId);
@@ -109,7 +158,9 @@ void loop() {
    // Serial.println(receiveData.yPos);
 
   // Convert the x,y coordinate to an angle
-  destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
+  // destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
+  destinationAngle = random(180);
+  Serial.println(destinationAngle);
 
   // sendData.blink = 1;
   // ETout.sendData();
@@ -132,8 +183,21 @@ void loop() {
   // musicPlayer.startPlayingFile(filename_char);
   }
 
-  // Gradually move the motor to its destination
-  currentAngle = currentAngle * (1.0 - smooth) + destinationAngle * smooth;
-  statueServo.write(currentAngle);
-  delay(10);
+  // Moved the servo a step toward its destination using the specified
+  // easing function
+  servoEaser.update();
+
+  // Only reverse direction if the servo has already reached its initial destination
+  if( servoEaser.hasArrived() ) {
+    // Find out where the servo is currently pointed
+    int currPos = servoEaser.getCurrPos();
+    // Provides a variable rotation duration so that long distances aren't covered
+    // in the same amount of time as short distances
+    int duration = int(float(abs(destinationAngle - currPos)) / servSpeed * 1000);
+    // Constrains the duration to reasonable bounds
+    duration = constrain(duration, durationLower, durationUpper);
+    Serial.println(duration);
+    
+    servoEaser.easeTo( destinationAngle, duration );
+  }
 }
