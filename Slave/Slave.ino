@@ -10,6 +10,7 @@ int statueId = 1;
 // Statue position
 #define statueX 50.0
 #define statueY 160.0
+#define offset 45.0
 
 int currentAngle = 0;
 int destinationAngle = 0;
@@ -88,6 +89,7 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
   // Because servos measure angle backwards for some reason, we have to
   // map the geometric angle to a servo angle
   deg = map(deg, 0, 180, 180, 0);
+  deg = deg - offset;
   // Serial.println(deg);
   return deg;
 }
