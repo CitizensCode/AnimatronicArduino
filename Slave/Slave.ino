@@ -8,8 +8,8 @@
 // The unique ID of the unit
 int statueId = 1;
 // Statue position
-#define statueX 90.0
-#define statueY 164.0
+#define statueX 50.0
+#define statueY 160.0
 
 int currentAngle = 0;
 int destinationAngle = 0;
