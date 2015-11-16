@@ -128,42 +128,32 @@ void loop() {
   // If we receive data, do something with it.
   Serial.println("...");
   if (ETin.receiveData()) {
-   Serial.println("---------------");
-   Serial.print("Statue: ");
-   Serial.println(receiveData.unitId);
-   Serial.print("Command: ");
-   Serial.println(receiveData.commandType);
-   Serial.print("X: ");
-   Serial.print(receiveData.xPos);
-   Serial.print(", Y: ");
-   Serial.println(receiveData.yPos);
+    if (DEBUG > 4) {
+      Serial.println("---------------");
+      Serial.print("Statue: ");
+      Serial.println(receiveData.unitId);
+      Serial.print("Command: ");
+      Serial.println(receiveData.commandType);
+      Serial.print("X: ");
+      Serial.print(receiveData.xPos);
+      Serial.print(", Y: ");
+      Serial.println(receiveData.yPos);
+      Serial.print("Track Active: ");
+      Serial.println(receiveData.trackActive);
+      Serial.print("ScriptId: ");
+      Serial.println(receiveData.scriptId);
+      Serial.print("AudioId: ");
+      Serial.println(receiveData.audioId);
+    }
 
-  // Convert the x,y coordinate to an angle
-  destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
+    // TODO: handle commands here
 
-  // sendData.blink = 1;
-  // ETout.sendData();
-
-  // fileNumber = receiveData.audio;
-
-  // if (fileNumber < 10) {
-  //   filename = "0";
-  //   filename.concat(fileNumber);
-  //   filename.concat(".mp3");
-  // } else {
-  //   filename = "";
-  //   filename.concat(fileNumber);
-  //   filename.concat(".mp3");
-  // }
-
-  // Serial.println(filename);
-  // filename.toCharArray(filename_char, 10);
-  // // Serial.println(filename_char);
-  // musicPlayer.startPlayingFile(filename_char);
+    // Convert the x,y coordinate to an angle
+    destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
   }
 
   // Gradually move the motor to its destination
   currentAngle = currentAngle * (1.0 - smooth) + destinationAngle * smooth;
   statueServo.write(currentAngle);
-  delay(1000);
+//  delay(1000);
 }

@@ -10,7 +10,7 @@
 // debug level for output verbosity
 #define DEBUG             10
 #define SIMULATE_AUDIO          0
-#define SIMULATE_MOTOR          1
+#define SIMULATE_MOTOR          0
 
 #define SCRIPT_INTERMISSION_MS    10000
 #define POST_STOP_DELAY_MS          500
@@ -136,14 +136,23 @@ void parse_line_args(char line[], char statue_id[], char command[], char command
   terminate_arg_string(arg_id, arg_index, statue_id, command, command_args, pause);
 }
 
-void parse_command_args(char command_args[], int *xPos, int *yPos) {
+void parse_command_args(char command_args[], int *xPos, int *yPos, int *trackActive) {
   int i = 0;
   int arg_index = 0;
   int arg_id = 0;
+  
   char xPosString[MAX_ARG_LENGTH];
   char yPosString[MAX_ARG_LENGTH];
 
   char c = command_args[i];
+
+  if (String(c).equals("j") || String(c).equals("J")) {
+    *trackActive = 1;
+  }
+  else {
+    *trackActive = 0;
+  }
+  
   while (1) {
     if (c == 0x2C || c == 0x0) { // arg delimiter (comma or null character)
       if (arg_id == 0) {
@@ -431,9 +440,7 @@ void loop() {
             sendData.commandType = CMD_MOVE;
 
             // parse out move coordinates
-            
-            sendData.xPos = CMD_MOVE;
-            sendData.yPos = CMD_MOVE;
+            parse_command_args(command_args, &(sendData.xPos), &(sendData.yPos), &(sendData.trackActive));
 
             if (DEBUG > 4) {
               Serial.print("Move position: ");
@@ -557,15 +564,6 @@ void loop() {
       ETout.sendData();
     }
     Serial.print("sendCoords elapsed time: "); Serial.println(millis() - timestamp);
-  
-    // Generate the file number to play from the angle of the pot
-    // fileNumber = constrain(map(angle, 0, 180, 1, 12), 1, 11);
-    // if (currentFileNumber != fileNumber) {
-    //   changed = true;
-    //   currentFileNumber = fileNumber;
-    // } else {
-    //   changed = false;
-    // }
 
     if (scriptFinished == true){
       Serial.println("*****************************");
