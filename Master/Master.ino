@@ -19,7 +19,7 @@ Metro sendCoords = Metro(150);  // Send the result every 250ms
 //bool changed = true;
 
 // Distance between the range finders
-#define distRF 190.0
+#define distRF 202.0
 #define rangeA 7 // RF A
 #define rangeB 8 // RF B
 long pulseA, pulseB;

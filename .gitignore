@@ -4,6 +4,7 @@
 /TangentTests
 /StepperTests
 /RangeTests
+/EasingExamples
 ._*
 *.ipynb
 *.pdf
