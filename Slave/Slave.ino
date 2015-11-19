@@ -1,4 +1,5 @@
-#include <SoftEasyTransfer.h>
+#include <EasyTransfer.h>
+//#include <SoftEasyTransfer.h>
 #include <SoftwareSerial.h>
 #include <Servo.h>
 #include <SPI.h>
@@ -13,7 +14,7 @@
 #define statueY 164.0
 
 // debug level for output verbosity
-#define DEBUG             10
+#define DEBUG             0
 #define SIMULATE_AUDIO          0
 #define SIMULATE_MOTOR          1
 
@@ -67,8 +68,8 @@ String audiofilename;
 char filename_char[10];
 
 // Set up easy transfer
-// EasyTransfer ETin, ETout;
-SoftEasyTransfer ETin;
+EasyTransfer ETin;
+//SoftEasyTransfer ETin;
 struct RECEIVE_DATA_STRUCTURE{
   int unitId; // statue id
   int commandType; // command type...eg move, play, track, etc.
@@ -83,12 +84,17 @@ RECEIVE_DATA_STRUCTURE receiveData;
 void setup() {
   Serial.begin(9600);
 
-  Serial.println("Initializing SD card...");
+  if (DEBUG) {
+    Serial.println("Initializing SD card...");
+  }
   SD.begin(CARDCS);    // initialise the SD card
-  Serial.println("SD card initialized.");
+  if (DEBUG) {
+    Serial.println("SD card initialized.");
+  }
   
-  XBee.begin(9600);
-  ETin.begin(details(receiveData), &XBee);
+//  XBee.begin(9600);
+//  ETin.begin(details(receiveData), &XBee);
+  ETin.begin(details(receiveData), &Serial);
   // ETout.begin(details(sendData), &Serial);
 
   statueServo.attach(9);
@@ -100,8 +106,11 @@ void setup() {
 
   musicPlayer.setVolume(10,10);
   musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
-  Serial.println(F("Playing test file..."));
-  musicPlayer.playFullFile("left.mp3");
+  if (DEBUG) {
+    Serial.println(F("Playing test file..."));
+    musicPlayer.playFullFile("left.mp3");
+  }
+  
   
   
 
@@ -131,7 +140,9 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
 
 void loop() {
   // If we receive data, do something with it.
-  Serial.println("...");
+  if (DEBUG > 4) {
+    Serial.println("...");
+  }
   if (ETin.receiveData()) {
     if (DEBUG > 4) {
       Serial.println("---------------");
@@ -217,5 +228,5 @@ void loop() {
   }
   
   statueServo.write(currentAngle);
-  delay(100);
+  delay(10);
 }
