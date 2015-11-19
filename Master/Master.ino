@@ -572,6 +572,17 @@ void loop() {
       
       scriptFile.close();
       runningScript = false;
+
+      // send STOP signal to all statues
+      sendData.unitId = STATUE_ID_ALL;
+      sendData.commandType = CMD_STOP;
+      ETout.sendData();
+
+      if (DEBUG > 4) {
+        Serial.print("STOP ALL SIGNAL SENT");
+      }
+
+      delay(POST_STOP_DELAY_MS);
   
       ref_time = millis();
       delay_time = SCRIPT_INTERMISSION_MS;

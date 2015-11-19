@@ -38,8 +38,10 @@
 
 
 
+int trackActive = 1;
 int currentAngle = 0;
-int destinationAngle = 0;
+int trackDestinationAngle = 0;
+int moveDestinationAngle = 0;
 // Used to smooth the motion between positions. The closer to 
 // 1, the faster the motion converges to its destination.
 float smooth = 0.1;
@@ -60,6 +62,9 @@ SoftwareSerial XBee =  SoftwareSerial(2, 3);
 
  Adafruit_VS1053_FilePlayer musicPlayer = 
    Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
+
+String audiofilename;
+char filename_char[10];
 
 // Set up easy transfer
 // EasyTransfer ETin, ETout;
@@ -148,12 +153,69 @@ void loop() {
 
     // TODO: handle commands here
 
-    // Convert the x,y coordinate to an angle
-    destinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
+    // only handle commands directed to this statue
+    if (receiveData.unitId == STATUE_ID || receiveData.unitId == STATUE_ID_ALL) {
+      // handle each command type
+      switch (receiveData.commandType) {
+        case CMD_PLAY:
+          if (DEBUG > 1) {
+            Serial.println("HANDLING PLAY COMMAND");
+          }
+
+          musicPlayer.stopPlaying();
+
+          audiofilename = "z/"; // TODO: select correct directory based on receiveData.scriptId
+          audiofilename.concat(receiveData.audioId);
+          audiofilename.concat(".mp3");
+
+          audiofilename.toCharArray(filename_char, 10);
+          
+          musicPlayer.startPlayingFile(filename_char);
+
+          break;
+
+        case CMD_MOVE:
+          if (DEBUG > 1) {
+            Serial.println("HANDLING MOVE COMMAND");
+          }
+
+          // set tracking state
+          trackActive = receiveData.trackActive;
+          
+          // Convert the x,y coordinate to an angle
+          moveDestinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
+
+          break;
+
+        case CMD_TRACK:
+          // Convert the x,y coordinate to an angle
+          trackDestinationAngle = motorPositionDeg(receiveData.xPos, receiveData.yPos, statueX, statueY);
+          
+          break;
+
+        case CMD_STOP:
+
+          musicPlayer.stopPlaying();
+          trackActive = TRACK_ACTIVE;
+
+          break;
+      }
+    }
+    
+
+    
   }
 
   // Gradually move the motor to its destination
-  currentAngle = currentAngle * (1.0 - smooth) + destinationAngle * smooth;
+  if (trackActive == TRACK_ACTIVE) {
+    // tracking move
+    currentAngle = currentAngle * (1.0 - smooth) + trackDestinationAngle * smooth;
+  }
+  else if (trackActive == TRACK_INACTIVE) {
+    // fixed mode
+    currentAngle = currentAngle * (1.0 - smooth) + moveDestinationAngle * smooth;
+  }
+  
   statueServo.write(currentAngle);
-//  delay(1000);
+  delay(100);
 }
