@@ -278,7 +278,7 @@ Metro sendCoords = Metro(150);  // Send the result every 250ms
 //bool changed = true;
 
 // Distance between the range finders
-#define distRF 202.0
+#define distRF 232.0
 #define rangeA 7 // RF A
 #define rangeB 8 // RF B
 long pulseA, pulseB;
@@ -563,7 +563,7 @@ void loop() {
       // negative because of the coordinate system used relative to the position
       // of the sensors.
       xCoord = pulseA * cos(smoothedAngle);
-      yCoord = pulseA * sin(smoothedAngle);
+      yCoord = -1 * pulseA * sin(smoothedAngle);
     }
     Serial.print("getDistance elapsed time: "); Serial.println(millis() - timestamp);
   
