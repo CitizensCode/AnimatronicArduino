@@ -6,17 +6,41 @@
 #include <Adafruit_VS1053.h>
 #include <SD.h>
 
-// unique ID of the unit: choose a statue id from 1-5, corresponding to A-E in the script
-#define STATUE_ID     1
-
-// Statue position
-#define statueX 90.0
-#define statueY 164.0
-
 // debug level for output verbosity
-#define DEBUG             0
-#define SIMULATE_AUDIO          0
-#define SIMULATE_MOTOR          1
+#define DEBUG                   0
+
+// STATUE_ID: unique ID of the unit
+//    choose a statue id from 1-5, corresponding to A-E in the script
+// statueX: x-position of base of the unit
+// statueY: y-position of base of the unit
+
+// Statue position A / 1
+#define STATUE_ID     1
+#define statueX      40
+#define statueY      84
+
+//// Statue position B / 2
+#define STATUE_ID     2
+#define statueX      80
+#define statueY     143
+
+// Statue position C / 3
+#define STATUE_ID     3
+#define statueX     134
+#define statueY     177
+
+// Statue position D / 4
+#define STATUE_ID     4
+#define statueX     202
+#define statueY     183
+
+// Statue position E / 5
+#define STATUE_ID     5
+#define statueX     265
+#define statueY      95
+
+
+
 
 // control constants
 #define   CMD_PLAY            0
