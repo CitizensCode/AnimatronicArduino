@@ -17,34 +17,34 @@
 // statueY: y-position of base of the unit
 
 // Statue position A / 1
-#define STATUE_ID     1
-#define statueX      40
-#define statueY      84
-#define offset       45.0
+// #define STATUE_ID     1
+// #define statueX      0
+// #define statueY      102
+// #define offset       45.0
 
 //// Statue position B / 2
 //#define STATUE_ID     2
-//#define statueX      80
-//#define statueY     143
+//#define statueX      40
+//#define statueY     161
 //#define offset       45.0
 
 //// Statue position C / 3
 //#define STATUE_ID     3
-//#define statueX     134
-//#define statueY     177
+//#define statueX     94
+//#define statueY     195
 //#define offset       45.0
 
 //// Statue position D / 4
 //#define STATUE_ID     4
-//#define statueX     202
-//#define statueY     183
+//#define statueX     162
+//#define statueY     201
 //#define offset       45.0
 
 //// Statue position E / 5
-//#define STATUE_ID     5
-//#define statueX     265
-//#define statueY      95
-//#define offset      -45.0
+#define STATUE_ID     5
+#define statueX     225
+#define statueY      113
+#define offset      -45.0
 
 
 
@@ -158,25 +158,24 @@ void setup() {
   // ETout.begin(details(sendData), &Serial);
 
   statueServo.attach(9);
-  servoEaser.begin( statueServo, servoFrameMillis);
   servoEaser.useMicroseconds(true);
 
   if (STATUE_ID == 1 || STATUE_ID == 2) {
-    servoEaser.setEasingFunc(easeInOutQuad);
-    durationLower = 500;
-    durationUpper = 1200;
+    servoEaser.setEasingFunc(easeInOutCubic);
+    durationLower = 2000;
+    durationUpper = 1500;
   } else if (STATUE_ID == 3) {
     servoEaser.setEasingFunc(easeInOutCubic);
-    durationLower = 800;
+    durationLower = 2000;
     durationUpper = 1500;
   } else {
     servoEaser.setEasingFunc(easeInOutQuart);
-    durationLower = 1000;
-    durationUpper = 2000;
+    durationLower = 2000;
+    durationUpper = 3000;
   }
   
-
-  servoEaser.easeTo( 90, 1000);
+  servoEaser.begin( statueServo, servoFrameMillis);
+  servoEaser.easeTo( 0, 5000);
 
   if (! musicPlayer.begin()) { // initialise the music player
      Serial.println(F("Couldn't find VS1053, do you have the right pins defined?"));
@@ -211,9 +210,15 @@ float motorPositionDeg(float xCoord, float yCoord, float motorX, float motorY) {
   deg = rad * -180 / M_PI;
   // Because servos measure angle backwards for some reason, we have to
   // map the geometric angle to a servo angle
+  deg = deg + offset;
+  if (deg < 0) {
+    deg = deg + 360;
+    if ((360 - deg) < 90) {
+      deg = 0;
+    }
+  }
+  deg = constrain(deg, 0, 180);
   deg = map(deg, 0, 180, 180, 0);
-  deg = constrain(deg - offset, 0, 180);
-  // Serial.println(deg);
   return deg;
 }
 
@@ -320,7 +325,7 @@ void loop() {
 
     // Provides a variable rotation duration so that long distances aren't covered
     // in the same amount of time as short distances
-    int duration = int(float(abs(destinationAngle - currPos)) / servSpeed * 1000);
+    int duration = int(float(abs(destinationAngle - currPos)) / servSpeed * 2000);
 
     // Constrains the duration to reasonable bounds
     duration = constrain(duration, durationLower, durationUpper);
