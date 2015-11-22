@@ -167,46 +167,6 @@ void setup() {
   musicPlayer.useInterrupt(VS1053_FILEPLAYER_PIN_INT);  // DREQ int
   Serial.println(F("Playing test file..."));
   musicPlayer.playFullFile("left.mp3");
-
-//  scriptFile = SD.open("script.txt");
-//
-//  if (scriptFile && scriptFile.available()) {
-//    char line[MAX_LINE_LENGTH];
-//    char statue_id[MAX_ARG_LENGTH];
-//    char command[MAX_ARG_LENGTH];
-//    char command_args[MAX_ARG_LENGTH];
-//    char pause[MAX_ARG_LENGTH];
-//    
-//    int i = 0;
-//    char c = scriptFile.read();
-//    while (c != EOF) {
-//
-//      if (c == 0xA) {
-//        // end of line, parse and save
-//        line[i] = 0x0;
-//        i = 0;
-//        Serial.println(line);
-//
-//        parse_line_args(line, statue_id, command, command_args, pause);
-//        Serial.print("  "); Serial.println(statue_id);
-//        Serial.print("  "); Serial.println(command);
-//        Serial.print("  "); Serial.println(command_args);
-//        Serial.print("  "); Serial.println(pause);
-//        Serial.println();
-//      }
-//      else {
-//        line[i] = (char) c;
-//        i++;
-//      }
-//      
-//      c = scriptFile.read();
-//      
-//    }
-//    scriptFile.close();
-//  }
-//  else {
-//    Serial.println("error opening script.txt");
-//  }
 }
 
 
