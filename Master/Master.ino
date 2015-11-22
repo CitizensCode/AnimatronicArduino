@@ -68,7 +68,16 @@ bool parseLine = false;
 bool scriptFinished = true;
 
 String audiofilename;
+String scriptFilename;
 char filename_char[10];
+int scriptIndex = 0;
+int minScriptIndex = 1;
+char scriptOrder[] = "pzafec";
+int numScripts = 6;
+//char openScript[] =  "p"; // p
+bool firstScript = true;
+int openScriptIndex = 0;
+//char closeScript = 0x63; // c
 
 
 void terminate_arg_string(int arg_id, int arg_index, char statue_id[], char command[], char command_args[],  char pause[]) {
@@ -380,12 +389,22 @@ void loop() {
       ETout.sendData();
 
       if (DEBUG > 4) {
-        Serial.print("STOP ALL SIGNAL SENT");
+        Serial.println("STOP ALL SIGNAL SENT");
       }
 
       delay(POST_STOP_DELAY_MS);
+
       
-      scriptFile = SD.open("z/script.txt"); // TODO: edit to support multiple scripts
+      if (firstScript == true) {
+        scriptIndex = openScriptIndex;
+      }
+      scriptFilename = "";
+      scriptFilename.concat(scriptOrder[scriptIndex]);
+      scriptFilename.concat("/script.txt");
+      scriptFilename.toCharArray(filename_char, 10);
+      Serial.print("Opening file: ");
+      Serial.println(filename_char);
+      scriptFile = SD.open(filename_char);
       runningScript = true;
       scriptFinished = false;
       delay_time = 0;
@@ -458,8 +477,9 @@ void loop() {
           }
 
           if (SIMULATE_AUDIO) {
-            // TODO: edit to support multiple scripts
-            audiofilename = "z/";
+            audiofilename = "";
+            audiofilename.concat(scriptOrder[scriptIndex]);
+            audiofilename.concat("/");
             audiofilename.concat(command_args);
             audiofilename.concat(".mp3");
             audiofilename.toCharArray(filename_char, 10);
@@ -469,7 +489,7 @@ void loop() {
           else {
             sendData.unitId = statueIdStringToInt(statue_id);
             sendData.commandType = CMD_PLAY;
-            sendData.scriptId = 0; // TODO: edit to support multiple scripts
+            sendData.scriptId = scriptIndex;
             sendData.audioId = String(command_args).toInt();
       
             if (DEBUG > 4) {
@@ -572,6 +592,11 @@ void loop() {
       
       scriptFile.close();
       runningScript = false;
+      firstScript = false;
+      scriptIndex++;
+      if (scriptIndex % numScripts == 0) {
+        scriptIndex = minScriptIndex;
+      }
 
       // send STOP signal to all statues
       sendData.unitId = STATUE_ID_ALL;
