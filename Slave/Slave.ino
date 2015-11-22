@@ -124,7 +124,8 @@ SoftwareSerial XBee =  SoftwareSerial(2, 3);
    Adafruit_VS1053_FilePlayer(SHIELD_RESET, SHIELD_CS, SHIELD_DCS, DREQ, CARDCS);
 
 String audiofilename;
-char filename_char[10];
+char filename_char[20];
+char scriptOrder[] = "pzafec";
 
 // Set up easy transfer
 EasyTransfer ETin;
@@ -242,8 +243,6 @@ void loop() {
       Serial.println(receiveData.audioId);
     }
 
-    // TODO: handle commands here
-
     // only handle commands directed to this statue
     if (receiveData.unitId == STATUE_ID || receiveData.unitId == STATUE_ID_ALL) {
       // handle each command type
@@ -255,11 +254,13 @@ void loop() {
 
           musicPlayer.stopPlaying();
 
-          audiofilename = "z/"; // TODO: select correct directory based on receiveData.scriptId
+          audiofilename = "";
+          audiofilename.concat(scriptOrder[receiveData.scriptId]);
+          audiofilename.concat("/");
           audiofilename.concat(receiveData.audioId);
           audiofilename.concat(".mp3");
 
-          audiofilename.toCharArray(filename_char, 10);
+          audiofilename.toCharArray(filename_char, 20);
           
           musicPlayer.startPlayingFile(filename_char);
 
