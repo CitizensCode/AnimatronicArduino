@@ -69,10 +69,10 @@ bool scriptFinished = true;
 
 String audiofilename;
 String scriptFilename;
-char filename_char[10];
+char filename_char[20];
 int scriptIndex = 0;
 int minScriptIndex = 1;
-char scriptOrder[] = "pzafec";
+char scriptOrder[] = "pzafec"; // make sure this exactly matches the same variable on the Slave program
 int numScripts = 6;
 //char openScript[] =  "p"; // p
 bool firstScript = true;
@@ -401,7 +401,7 @@ void loop() {
       scriptFilename = "";
       scriptFilename.concat(scriptOrder[scriptIndex]);
       scriptFilename.concat("/script.txt");
-      scriptFilename.toCharArray(filename_char, 10);
+      scriptFilename.toCharArray(filename_char, 20);
       Serial.print("Opening file: ");
       Serial.println(filename_char);
       scriptFile = SD.open(filename_char);
@@ -419,15 +419,18 @@ void loop() {
   
       switch (scriptStatus) {
         case SCRIPT_NOT_OPEN:
+          Serial.println("readline returned SCRIPT_NOT_OPEN");
           parseLine = false;
           scriptFinished = true;
           break;
     
         case SCRIPT_OPEN:
+          Serial.println("readline returned SCRIPT_OPEN");
           parseLine = true;
           break;
     
         case SCRIPT_EOF:
+          Serial.println("readline returned SCRIPT_EOF");
           parseLine = true;
           scriptFinished = true;
           break;
@@ -482,7 +485,7 @@ void loop() {
             audiofilename.concat("/");
             audiofilename.concat(command_args);
             audiofilename.concat(".mp3");
-            audiofilename.toCharArray(filename_char, 10);
+            audiofilename.toCharArray(filename_char, 20);
             musicPlayer.stopPlaying();
             musicPlayer.startPlayingFile(filename_char);
           }
@@ -604,7 +607,7 @@ void loop() {
       ETout.sendData();
 
       if (DEBUG > 4) {
-        Serial.print("STOP ALL SIGNAL SENT");
+        Serial.println("STOP ALL SIGNAL SENT");
       }
 
       delay(POST_STOP_DELAY_MS);
