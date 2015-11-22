@@ -20,27 +20,31 @@
 #define STATUE_ID     1
 #define statueX      40
 #define statueY      84
-#define offset 45.0
+#define offset       45.0
 
-// Statue position B / 2
-#define STATUE_ID     2
-#define statueX      80
-#define statueY     143
+//// Statue position B / 2
+//#define STATUE_ID     2
+//#define statueX      80
+//#define statueY     143
+//#define offset       45.0
 
-// Statue position C / 3
-#define STATUE_ID     3
-#define statueX     134
-#define statueY     177
+//// Statue position C / 3
+//#define STATUE_ID     3
+//#define statueX     134
+//#define statueY     177
+//#define offset       45.0
 
-// Statue position D / 4
-#define STATUE_ID     4
-#define statueX     202
-#define statueY     183
+//// Statue position D / 4
+//#define STATUE_ID     4
+//#define statueX     202
+//#define statueY     183
+//#define offset       45.0
 
-// Statue position E / 5
-#define STATUE_ID     5
-#define statueX     265
-#define statueY      95
+//// Statue position E / 5
+//#define STATUE_ID     5
+//#define statueX     265
+//#define statueY      95
+//#define offset      -45.0
 
 
 
@@ -156,11 +160,11 @@ void setup() {
   servoEaser.begin( statueServo, servoFrameMillis);
   servoEaser.useMicroseconds(true);
 
-  if (statueId == 1 || statueId == 2) {
+  if (STATUE_ID == 1 || STATUE_ID == 2) {
     servoEaser.setEasingFunc(easeInOutQuad);
     durationLower = 500;
     durationUpper = 1200;
-  } else if (statueId == 3) {
+  } else if (STATUE_ID == 3) {
     servoEaser.setEasingFunc(easeInOutCubic);
     durationLower = 800;
     durationUpper = 1500;
