@@ -8,12 +8,13 @@
 #include <Adafruit_VS1053.h>
 
 // debug level for output verbosity
-#define DEBUG             10
+#define DEBUG             8
 #define SIMULATE_AUDIO          0
 #define SIMULATE_MOTOR          0
 
 #define SCRIPT_INTERMISSION_MS    10000
 #define POST_STOP_DELAY_MS          500
+#define AUDIENCE_THRESHOLD          200
 
 // control constants
 #define   CMD_PLAY            0
@@ -66,6 +67,7 @@ bool runningScript = false;
 int scriptStatus = SCRIPT_NOT_OPEN;
 bool parseLine = false;
 bool scriptFinished = true;
+bool audienceReady = false;
 
 String audiofilename;
 String scriptFilename;
@@ -255,6 +257,9 @@ int statueIdStringToInt(char statue_id[]) {
   else if (statueStringId.equals("E")) {
     return STATUE_ID_5;
   }
+  else if (statueStringId.equals("*")) {
+    return STATUE_ID_ALL;
+  }
   else {
     Serial.print("Received invalid statue ID string: ");
     Serial.println(statue_id);
@@ -268,8 +273,8 @@ SoftwareSerial XBee =  SoftwareSerial(2, 3);
 SoftEasyTransfer ETout;
 
 // Used for scheduling distance readings and communications
-Metro getDistance = Metro(100); // Take a reading every 100ms
-Metro sendCoords = Metro(150);  // Send the result every 250ms
+Metro getDistance = Metro(50); // Take a reading every 50ms
+Metro sendCoords = Metro(25);  // Send the result every 25ms
 
 
 // Set of variables for choosing which file to play
@@ -281,7 +286,12 @@ Metro sendCoords = Metro(150);  // Send the result every 250ms
 #define distRF 232.0
 #define rangeA 7 // RF A
 #define rangeB 8 // RF B
-long pulseA, pulseB;
+long pulseA, pulseB, pulseAverage;
+
+#define NUM_AUDIENCE_MEASUREMENTS_THRESHOLD   5
+int audience_ready_index = 0;
+bool audienceReadyArray[NUM_AUDIENCE_MEASUREMENTS_THRESHOLD];
+
 
 // Set up variables needed to smooth readings
 float lastAngle = 90; // Used to prevent erratic readings
@@ -324,6 +334,10 @@ void setup() {
   Serial.println("Initializing SD card...");
   SD.begin(CARDCS);    // initialise the SD card
   Serial.println("SD card initialized.");
+
+  for (int i=0; i<NUM_AUDIENCE_MEASUREMENTS_THRESHOLD; i++) {
+    audienceReadyArray[i] = false;
+  }
 
   ref_time = millis();
 
@@ -376,10 +390,23 @@ void loop() {
   if (DEBUG > 10) {
     Serial.println("  Entering loop iteration...");
   }
+
+  audienceReady = true;
+  for (int i=0; i<NUM_AUDIENCE_MEASUREMENTS_THRESHOLD; i++) {
+    audienceReady = audienceReady && audienceReadyArray[i];
+  }
+  if (audienceReady == true) {
+    Serial.println("Audience is READY!");
+  }
+  else {
+    Serial.println("Audience is NOT READY!");
+  }
   
   if (runningScript == false) {
-    // only start a script if delay_time has elapsed (initially 0, later set to script intermission time)
-    if (millis() - ref_time >= delay_time) {
+    // only start a script if the audience is ready (the sensors detect
+    // something in their field of vision) and delay_time has elapsed (initially
+    // 0, later set to script intermission time)
+    if (audienceReady == true && millis() - ref_time >= delay_time) {
       Serial.println("*****************************");
       Serial.println("         [ START ]");
       Serial.println("*****************************");
@@ -520,73 +547,6 @@ void loop() {
         Serial.println();
       }
     }
-    
-    
-  
-    // Calculate the distance reading at the interval specified above
-    timestamp = millis();
-    if (getDistance.check() == 1) {
-
-
-      if (!SIMULATE_MOTOR) {
-        // Get the distance from sensor A and B
-        // THIS IS AMAZINGLY SLOW IF DISTANCE SENSORS AREN'T HOOKED UP
-        pulseA = pulseIn(rangeA, HIGH);
-        pulseA = pulseA / 10.0; // 10 uS per cm
-        pulseB = pulseIn(rangeB, HIGH);
-        pulseB = pulseB / 10.0;
-      }
-      else {
-        // cheap hack to speed things up while we don't have distance sensors
-        pulseA = 0;
-        pulseB = 0;
-      }
-
-      // Get the angle relative to the first sensor
-      angle = angleCalc(pulseA, pulseB);
-      // Serial.println(angle * 180 / 3.14159);
-  
-      // Smooth the movement
-      readingsTotal = readingsTotal - readings[readingIndex]; // Subtract the old
-      readings[readingIndex] = angle; // Insert the new
-      readingsTotal = readingsTotal + readings[readingIndex]; // Add the new
-      readingIndex = readingIndex + 1; // Move to the next index
-      
-      // Loop around the array
-      if (readingIndex >= numReadings) {
-        readingIndex = 0; // Start the index back at 0
-      }
-      
-      // Take the average of the last three readings
-      smoothedAngle = readingsTotal / (float)numReadings;
-      // Find the x-coordinate and y-coordinate of the person. All y values are
-      // negative because of the coordinate system used relative to the position
-      // of the sensors.
-      xCoord = pulseA * cos(smoothedAngle);
-      yCoord = -1 * pulseA * sin(smoothedAngle);
-    }
-    Serial.print("getDistance elapsed time: "); Serial.println(millis() - timestamp);
-  
-  //  Serial.println("LOL");
-  
-    // Send the smoothed distance reading at the rate specified above
-    timestamp = millis();
-    if (sendCoords.check() == 1) {
-      sendData.unitId = STATUE_ID_ALL;
-      sendData.commandType = CMD_TRACK;
-      sendData.xPos = xCoord;
-      sendData.yPos = yCoord;
-
-      if (DEBUG > 4) {
-        Serial.print("Track position: ");
-        Serial.print(sendData.xPos);
-        Serial.print(", ");
-        Serial.println(sendData.yPos);
-      }
-      
-      ETout.sendData();
-    }
-    Serial.print("sendCoords elapsed time: "); Serial.println(millis() - timestamp);
 
     if (scriptFinished == true){
       Serial.println("*****************************");
@@ -621,6 +581,92 @@ void loop() {
       }
     }
   }
+
+     
+  // Calculate the distance reading at the interval specified above
+  timestamp = millis();
+  if (getDistance.check() == 1) {
+
+    if (!SIMULATE_MOTOR) {
+      // Get the distance from sensor A and B
+      // THIS IS AMAZINGLY SLOW IF DISTANCE SENSORS AREN'T HOOKED UP
+      pulseA = pulseIn(rangeA, HIGH);
+      pulseA = pulseA / 10.0; // 10 uS per cm
+      pulseB = pulseIn(rangeB, HIGH);
+      pulseB = pulseB / 10.0;
+
+      Serial.print("Sensor A: ");
+      Serial.println(pulseA);
+      Serial.print("Sensor B: ");
+      Serial.println(pulseB);
+
+      if (pulseA > distRF) {
+        pulseA = distRF;
+      }
+      if (pulseB > distRF) {
+        pulseB = distRF;
+      }
+    }
+    else {
+      // cheap hack to speed things up while we don't have distance sensors
+      pulseA = 0;
+      pulseB = 0;
+    }
+
+    pulseAverage = (pulseA + pulseB) / 2;
+    Serial.print("Sensor average: ");
+    Serial.println(pulseAverage);
+    if (pulseAverage >= AUDIENCE_THRESHOLD) {
+      audienceReadyArray[audience_ready_index] = false;
+    }
+    else {
+      audienceReadyArray[audience_ready_index] = true;
+    }
+    audience_ready_index = (audience_ready_index + 1) % NUM_AUDIENCE_MEASUREMENTS_THRESHOLD;
+
+    // Get the angle relative to the first sensor
+    angle = angleCalc(pulseA, pulseB);
+    // Serial.println(angle * 180 / 3.14159);
+
+    // Smooth the movement
+    readingsTotal = readingsTotal - readings[readingIndex]; // Subtract the old
+    readings[readingIndex] = angle; // Insert the new
+    readingsTotal = readingsTotal + readings[readingIndex]; // Add the new
+    readingIndex = readingIndex + 1; // Move to the next index
+    
+    // Loop around the array
+    if (readingIndex >= numReadings) {
+      readingIndex = 0; // Start the index back at 0
+    }
+    
+    // Take the average of the last three readings
+    smoothedAngle = readingsTotal / (float)numReadings;
+    // Find the x-coordinate and y-coordinate of the person. All y values are
+    // negative because of the coordinate system used relative to the position
+    // of the sensors.
+    xCoord = pulseA * cos(smoothedAngle);
+    yCoord = -1 * pulseA * sin(smoothedAngle);
+  }
+  Serial.print("getDistance elapsed time: "); Serial.println(millis() - timestamp);
+
+  // Send the smoothed distance reading at the rate specified above
+  timestamp = millis();
+  if (sendCoords.check() == 1) {
+    sendData.unitId = STATUE_ID_ALL;
+    sendData.commandType = CMD_TRACK;
+    sendData.xPos = xCoord;
+    sendData.yPos = yCoord;
+
+    if (DEBUG > 4) {
+      Serial.print("Track position: ");
+      Serial.print(sendData.xPos);
+      Serial.print(", ");
+      Serial.println(sendData.yPos);
+    }
+    
+    ETout.sendData();
+  }
+  Serial.print("sendCoords elapsed time: "); Serial.println(millis() - timestamp);
 
   if (DEBUG > 10) {
     Serial.println("  Exiting loop iteration...");

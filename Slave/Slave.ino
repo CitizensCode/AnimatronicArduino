@@ -16,17 +16,17 @@
 // statueX: x-position of base of the unit
 // statueY: y-position of base of the unit
 
-// Statue position A / 1
-// #define STATUE_ID     1
-// #define statueX      0
-// #define statueY      102
-// #define offset       45.0
-
-//// Statue position B / 2
-//#define STATUE_ID     2
-//#define statueX      40
-//#define statueY     161
+//// Statue position A / 1
+//#define STATUE_ID     1
+//#define statueX      0
+//#define statueY      102
 //#define offset       45.0
+
+// Statue position B / 2
+#define STATUE_ID     2
+#define statueX      40
+#define statueY     161
+#define offset       45.0
 
 //// Statue position C / 3
 //#define STATUE_ID     3
@@ -40,11 +40,11 @@
 //#define statueY     201
 //#define offset       45.0
 
-//// Statue position E / 5
-#define STATUE_ID     5
-#define statueX     225
-#define statueY      113
-#define offset      -45.0
+////// Statue position E / 5
+//#define STATUE_ID     5
+//#define statueX     225
+//#define statueY      113
+//#define offset      -45.0
 
 
 
